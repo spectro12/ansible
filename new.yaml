@@ -1,16 +1,5 @@
+---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-est to be del
+ - hosts: localhost
+  roles:
+    - { role: geerlingguy.nginx }
