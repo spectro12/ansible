@@ -1,0 +1,15 @@
+---
+- name: create a {{ group }} 
+  win_group: 
+    name: "{{ group_name }}"
+    description: administrator group
+    state: present
+    
+    
+- name: ensure xyz {{ user }} is present
+    win_user: 
+      name: "{{ user_name }}"
+      password: "{{ new_password }}"
+      state: present
+      groups: 
+        - "{{ group_name }}"
