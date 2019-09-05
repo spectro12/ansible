@@ -1,0 +1,63 @@
+- hosts: all
+  vars_files:
+    - /etc/ansible/group_vars/tools_vars
+
+  tasks:
+      
+      - name: create installer directory
+        file:
+          path={{ installer_path }}
+          state=directory
+
+#     - name: create itm installer directory
+#        file:
+#          path=/tmp/tools_installer/itm_linux
+#          state=directory
+      
+      - name: Download and Untar ITM Packages
+        unarchive:
+            src: '{{ repo_path }}/itm_tivoli/v1x/base/itm_linux.tar.gz'
+            dest: '{{ installer_path }}'
+            remote_src: yes
+
+      - name: Install itm services
+        shell: |
+           cd {{ installer_path }}
+           ./silentInstall.sh
+
+      - name: Commenting KDC FAMILIES 
+        lineinfile: 
+           path: /opt/IBM/ITM/config/lz.ini
+           regexp: '^(.*)KDC_FAMILIES=(.*)$'
+           line: '#KDC_FAMILIES=$NETWORKPROTOCOL$'
+           backup: yes
+           backrefs: yes
+
+      - name: add lines 
+        lineinfile:
+           path: /opt/IBM/ITM/config/lz.ini 
+           line: "{{ item }}"
+        with_items:
+           - "GSK_V3_CIPHHER_SPECS=350A"
+           - "KDC_FAMILIES=HTTP:1920 IP.PIPE PORT:1918 IP use:n SNA use:n IP.SPIPE use:n http_server:n"
+      
+      - name: Get Hostname and add in ini file
+        shell: echo $HOSTNAME
+        register: host_result
+      
+      - name: Set hostanme in ini file
+        lineinfile:
+           path: /opt/IBM/ITM/config/lz.ini
+           regexp: '{{ item.regex }}'
+           line: '{{ item.replace_with }}'
+        with_items: 
+           - regex: '^(.*)CTIRA_HOSTNAME=(.*)$'
+             replace_with: 'CTIRA_HOSTNAME=vil_{{ host_result.stdout }}'  
+           - regex: '^(.*)CTIRA_SYSTEM_NAME=(.*)$'
+             replace_with: 'CTIRA_SYSTEM_NAME=vil_{{ host_result.stdout }}'
+
+      - name: Install itm services
+        shell: |
+           (echo 1;echo ip.pipe;echo ;echo 10.94.104.161;echo ;echo ;echo 1;echo ;echo ;echo 10.94.104.162;echo ;echo ;echo ;echo 1)|/opt/IBM/ITM/bin/itmcmd config -A lz
+           /opt/IBM/ITM/bin/itmcmd agent stop all
+           /opt/IBM/ITM/bin/itmcmd agent start all 
