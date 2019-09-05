@@ -1,0 +1,35 @@
+- name: create directory 
+  win_file:
+    path: C:\temp\WIN_FLEX
+    state: directory
+
+- name: download file from url
+  win_get_url: 
+    url: "{{http_link}}"
+    dest: C:\temp\WIN_FLEX\
+
+- name: unzip Tivoli package
+  win_unzip:
+    src: 'C:\temp\WIN_FLEX\managesoft-13.0.1'
+    dest: 'C:\temp\FLEX\'
+    creates: 'C:\temp\FLEX'
+
+- name: install file
+  win_shell: C:\temp\FLEX\managesoft-13.0.1\InstallFlexNetInvAgent
+
+#- name: replace old host entry with new one
+#  lininfile:
+#    path: C:\temp\hosts.txt
+#    regxp: 
+#    line: "{{items.line}}"
+#  with_items:
+#    - {10.94.0.65 	NDC3LAIPMAST01} 
+#    - {10.94.0.66 	NDC3LAIPMEDIA01} 
+#    - {10.94.136.67   NDC3R312NBMED02}
+#    - {10.94.1.162 itambcn.vodafone.co.in}
+
+- name: remove old host entry from host file
+  win_lineinfile:
+    path: C:\temp\testfile
+    line: remove this line
+    state: absent  
