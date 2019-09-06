@@ -1,0 +1,36 @@
+---
+
+- name: configure app pool
+  win_iis_webapppool:
+    name: '{{iis_app_pool_name}}'
+    state: started
+    attributes: '{{iis_app_pool_attributes|default(omit,true)}}'
+  when: iis_app_pool_name|default("",true)
+  register: iis_app_pool
+  notify: restart iis
+
+- name: ensure path for site exists
+  win_file:
+    path: '{{iis_site_path|mandatory}}'
+    state: directory
+  when: iis_site_name|default("",true)
+
+- name: allow iis group access to site path
+  win_acl:
+    path: '{{iis_acl_path}}'
+    user: '{{iis_acl_user|default(omit,true)}}'
+    rights: '{{iis_acl_rights|default(omit,true)}}'
+    type: '{{iis_acl_type|default(omit,true)}}'
+    state: '{{iis_acl_state|default(omit,true)}}'
+    inherit: '{{iis_acl_inherit|default(omit,true)}}'
+    propagation: '{{iis_acl_propagation|default(omit,true)}}'
+  when: iis_site_name|default("",true) and iis_acl_path|default("",true)
+
+- name: upload custom web.config from template
+  win_template:
+    src: '{{iis_site_web_config}}'
+    dest: '{{iis_site_path|mandatory}}/web.config'
+    force: '{{iis_site_web_config_force|default(true)}}'
+  when: iis_site_name|default("",true) and iis_site_web_config|default("",true)
+  notify: restart iis
+
