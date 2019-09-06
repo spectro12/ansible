@@ -1,0 +1,27 @@
+---
+
+ - hosts: win
+   tasks:
+
+     - name: install iis start
+       win_feature:
+         name: Web-Server
+         status: started
+     
+     - name: configure app pool
+     - name: ensure path for site exists
+     - name: allow iis group access to site path
+     
+
+     - name: start website
+       win_iis_website:
+         name: "iis_test"
+         state: started
+         port: 80
+         ip:
+         hostname:
+         application pool: "iis_test"
+         physical_path: d:\sites\iis_test
+         parameters: logfile.directory:c:\sites\logs
+       register: website
+
