@@ -1,0 +1,55 @@
+---
+
+- hosts: win
+  tasks:
+
+    - name: install iis
+      win_feature:
+        name: Web-Server
+        state: present
+        win_reboot: yes
+        include_sub_features: yes
+        include_management_tools: yes
+
+    - name: confiure application pool and start it
+      win_iis_webapppool:
+        name: default
+        state: started
+        #        attributes:
+
+    - name: ensure the path for site exists
+      win_file:
+        path: c:\sites\iis_test
+        state: directory
+
+    - name: ensure the path for logs exists
+      win_file:
+        path: c:\sites\logs
+        state: directory
+
+    - name: allow group access to site path
+      win_acl:
+        path: c:\sites\iis_test
+        user: Administrator
+        rights: FullControl
+        type: allow
+        state: present
+        inherit: ContainerInherit, ObjectInherit
+        propogation: 'None'
+
+        #    - name: upload a custome web.config from template
+        #      win_template:
+        #        src: 
+        #        dest: 
+        #        force: true
+
+    - name: config website
+      win_iis_website:
+        name: "iis_test"
+        state: started
+        port: 80
+        ip: 18.206.147.105
+        hostname: "test"
+        application pool: "iis_test"
+        physical_path: c:\sites\iis_test
+        parameters: logfile.directory:c:\sites\logs
