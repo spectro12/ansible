@@ -1,0 +1,30 @@
+- name: create installer directory
+      win_file:
+        path: c:\temp\WIN_FLEX
+        state: directory
+  
+    - name: download pakage
+      win_get_url:
+        src:
+        dest: c:\temp\WIN_FLEX\
+        remote_src: yes
+  
+    - name: unarchive Flexera packages
+      win_unzip:
+        src:  c:\temp\WIN_FLEX\
+        dest: c:\temp\WIN_FLEX\
+      
+   #- name: host entry
+      win_lineinfile:
+        path: c:\temp\hosts.txt
+        line: "10.94.1.162       itambc.vodafone.co.in"
+        backup: yes
+
+    - name: install flexira
+      win_package:
+        path: c:\temp\WIN_FLEX\managesoft-13.0.1\InstallFlexNetInvAgent
+        state: present
+
+    - name: install package flex
+      win_shell: C:\temp\WIN_FLEX\managesoft-13.0.1\InstallFlexNetInvAgent
+
