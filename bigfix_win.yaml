@@ -12,7 +12,7 @@
     - name: Unzips zip file
       win_unzip:
         dest: c:\BESInstallecrs\ClientMSI\
-        src: c:\BESInstallecrs\ClientMSI\"{{bigfix.zip}}"
+        src: c:\BESInstallecrs\ClientMSI\ "{{bigfix.zip}}"
         delete_archive: yes
         recurse: yes
     
