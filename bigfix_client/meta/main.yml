@@ -1,0 +1,18 @@
+---
+dependencies: []
+galaxy_info:
+  role_name: bigfix_client
+  author: harsh
+  company: ibm
+  description: BigFix Client installer
+  license: MIT
+  min_ansible_version: 2.0
+  platforms:
+    - name: EL
+      versions:
+        - 5
+        - 6
+        - 7
+      galaxy_tags:
+    - system
+    - bigfix

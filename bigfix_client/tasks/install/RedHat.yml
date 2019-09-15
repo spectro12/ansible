@@ -1,0 +1,6 @@
+---
+
+- name: Install BigFix Client
+  yum:
+    name: "/tmp/{{ bigfix_client_file_dest }}"
+    state: present
