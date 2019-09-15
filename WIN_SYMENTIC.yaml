@@ -1,0 +1,33 @@
+- name: create installer directory 
+  win_file:
+    path: "{{ DIR_INSTALLER }}"
+    state: directory 
+
+- name: Download and Untar Symantec Packages
+  win_unzip:
+    src:  "{{ REPO_PATH }}"
+    dest: "{{ DIR_INSTALLER }}"
+    remote_src: yes
+
+- name: Run install 
+  win_package:
+    path: "{{ DIR_INSTALLER }}\symentic\installer.exe"
+    state: present
+
+- name: create a new symentec service
+  win_service:
+    name: symentic
+    path: "{{ DIR_INSTALLER }}\symentic\run.exe"
+    display_name: symentic
+    description: this is symentic service
+ 
+#- name: start symentic service and set startup to auto 
+#  win_service: 
+#    name: symentic
+#    start_mode: auto
+#    state: started
+ 
+- name: restart symentic service
+  win_service: 
+    name: symentic
+    state: restarted 
