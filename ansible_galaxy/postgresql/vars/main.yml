@@ -1,0 +1,5 @@
+postgresql_databases:
+  - name: ansible
+postgresql_users:
+  - name: harsh
+    password: W0rk#1bm
