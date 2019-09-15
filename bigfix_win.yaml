@@ -1,0 +1,21 @@
+# https://www.ibm.com/support/knowledgecenter/SSARLZ_9.2.0/com.ibm.tivoli.tem.doc_9.2/Platform/Adm/c_installing_the_client_with_msi.html
+---
+- hosts: win
+  tasks:
+    
+    - name: 'Downloads zip file from HTTP remote repo ensures path exists '
+      win_get_url:
+        url: "{{remote_repo_path}}"
+        dest: c:\BESInstallecrs\ClientMSI\
+        creates: c:\BESInstallecrs\ClientMSI
+    
+    - name: Unzips zip file
+      win_unzip:
+        dest: c:\BESInstallecrs\ClientMSI\
+        src: c:\BESInstallecrs\ClientMSI\ "{{bigfix.zip}}"
+        delete_archive: yes
+        recurse: yes
+    
+    - name: Execute shell commands on target hosts
+      win_shell: msiexec.exe /i c:\BESInstallers\ClientMSI\BigFixAgent.msi /T=TransformList /qn
+    
