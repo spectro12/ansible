@@ -1,0 +1,35 @@
+---
+- name: Stop the service
+  systemd:
+    name: myplaybook.service
+    state: stopped
+  register: stop_result
+  ignore_errors: yes
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+  register: reload_result
+  ignore_errors: yes
+
+- name: Remove the service file
+  file:
+    path: /etc/systemd/system/myplaybook.service
+    state: absent
+  register: remove_result
+  ignore_errors: yes
+
+- name: Check for errors
+  ansible.builtin.fail:
+    msg: "An error occurred while removing the service."
+  when: remove_result.failed
+
+- block:
+  - name: Report success
+    debug:
+      msg: "Service successfully removed."
+  when: not remove_result.failed
+  rescue:
+    - name: Report error
+      debug:
+        msg: "Failed to remove service. See the above error message for details."

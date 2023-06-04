@@ -1,0 +1,27 @@
+---
+- name: Handle reboot, if needed
+  block:
+
+    - name: Create systemd service unit file
+      ansible.builtin.template:
+        src: myplaybook.service.j2   
+        dest: /etc/systemd/system/myplaybook.service
+      register: template_result
+      ignore_errors: yes
+
+    - name: Enable and start the systemd service
+      ansible.builtin.service:
+        name: myplaybook
+        state: stopped
+        enabled: yes
+      register: service_result
+      ignore_errors: yes
+
+    - name: Reboot system after all tasks
+      ansible.builtin.reboot:
+        reboot_timeout: 50
+
+  rescue:
+    - name: Report error
+      debug:
+        msg: "Failed to set up systemd for reboot. See the above error message for details."
