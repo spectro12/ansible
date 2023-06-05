@@ -1,4 +1,9 @@
 ---
+- name: Remove test_file
+  ansible.builtin.file:
+    path: /tests/test_file
+    state: absent
+
 - name: Stop the service
   systemd:
     name: myplaybook.service

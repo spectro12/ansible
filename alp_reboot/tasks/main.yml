@@ -1,37 +1,23 @@
----
-- name: Ensure the /tests directory exists
-  ansible.builtin.file:
-    path: /tests
-    state: directory
-
-- name: Create test_file in /tests directory
-  ansible.builtin.file:
+- name: Check if the file exists
+  ansible.builtin.stat:
     path: /tests/test_file
-    state: touch
+  register: file_result
 
-- name: Handle reboot, if needed
-  block:
+- name: Run first playbook
+  ansible.builtin.command:
+    cmd: ansible-playbook {{ first_playbook_path }}
+  delegate_to: localhost
+  when: not file_result.stat.exists
 
-    - name: Create systemd service unit file
-      ansible.builtin.template:
-        src: myplaybook.service.j2   
-        dest: /etc/systemd/system/myplaybook.service
-      register: template_result
-      ignore_errors: yes
+- name: Include tasks from my_tasks1.yml
+  include_tasks: create.yml
 
-    - name: Enable and start the systemd service
-      ansible.builtin.service:
-        name: myplaybook
-        state: stopped
-        enabled: yes
-      register: service_result
-      ignore_errors: yes
+- name: Run second playbook
+  ansible.builtin.command:
+    cmd: ansible-playbook {{ second_playbook_path }}
+  delegate_to: localhost
 
-    - name: Reboot system after all tasks
-      ansible.builtin.reboot:
-        reboot_timeout: 50
+- name: Include tasks from my_tasks2.yml
+  include_tasks: remove.yml
 
-  rescue:
-    - name: Report error
-      debug:
-        msg: "Failed to set up systemd for reboot. See the above error message for details."
+  # also remove the file as well.

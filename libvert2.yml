@@ -1,0 +1,87 @@
+- name: Setup ALP system as a libvirt host
+  hosts: alphost
+  vars:
+    workload:
+      name: libvirtd
+      image: registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/kvm:latest
+      labels:
+        install: install
+        uninstall: uninstall
+      service:
+        name: libvirtd
+        wait_for:
+          path: /var/run/libvirt/libvirt-sock
+
+  tasks:
+    - name: Setup service for workload {{ workload.name }}
+      when:
+        - workload.service is defined
+      block:
+        - name: Ensure service can be started for workload {{ workload.name }}
+          become: true
+          ansible.builtin.systemd_service:
+            name: "{{ workload.service.name }}"
+            state: "started"
+          register: workload_service_start
+
+        - name: Enable service to start on reboot for workload {{ workload.name }}
+          become: true
+          ansible.builtin.systemd_service:
+            name: "{{ workload.service.name }}"
+            enabled: true
+          when:
+            - workload_service_start is success
+
+        - name: Wait for service to be ready for workload {{ workload.name }}
+          when:
+            - workload.service.wait_for is defined
+          block:
+            - name: Check service path for workload {{ workload.name }}
+              ansible.builtin.wait_for:
+                path: "{{ workload.service.wait_for.path }}"
+              when:
+                - workload.service.wait_for.path is defined
+
+            - name: Check service port for workload {{ workload.name }}
+              ansible.builtin.wait_for:
+                port: "{{ workload.service.wait_for.port }}"
+              when:
+                - workload.service.wait_for.port is defined
+
+- name: Verify that Libvirt is operational
+  hosts: alphost
+  tasks:
+    - name: Query running Libvirt VMs
+      become: true
+      community.libvirt.virt:
+        command: list_vms
+      register: virt_list_vms
+
+    - name: Report running Libvirt VMs, if any
+      ansible.builtin.debug:
+        msg: "Running VMs: {{ virt_list_vms.list_vms | join(', ') }}"
+      when:
+        - ((virt_list_vms.list_vms | default([])) | length) > 0
+    
+    - name: Create file with content
+      become: true
+      ansible.builtin.copy:
+        content: "works"
+        dest: "/home/hash/test2/works.txt"
+
+    - name: Stop the service
+      systemd:
+        name: myplaybook.service
+        state: stopped
+      ignore_errors: yes
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+      ignore_errors: yes
+
+    - name: Remove the service file
+      file:
+        path: /etc/systemd/system/myplaybook.service
+        state: absent
+      ignore_errors: yes
