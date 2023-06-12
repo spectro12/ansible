@@ -1,0 +1,14 @@
+Refactor Ansible playbook for better error handling and system manipulation
+
+Details:
+
+    Introduced a variable playbook_name with the value "setup_libvirt_host.yml".
+
+    Added failed_when conditions in tasks "Retrieve image for workload", "Install tools for workload" and "Install required packages, if any, for workload" for better error handling.
+
+    Refactored the "Handle reboot, if needed" task block with additional tasks: checking for an existing systemd service unit file, creating a systemd service unit file using a template if not present, enabling and starting the service, and finally rebooting the system.
+
+
+    Introduced a new task "Check if the service exists" and a conditional block of tasks for stopping the systemd service, reloading the systemd daemon, and removing the service file if it exists.
+
+These changes enhance error handling, improve system configuration management, and ensure better cleaning up of resources after use.
