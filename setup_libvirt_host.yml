@@ -1,7 +1,7 @@
----
 - name: Setup ALP system as a libvirt host
   hosts: alphost
   vars:
+    playbook_name: "setup_libvirt_host.yml"
     workload:
       name: libvirtd
       image: registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/kvm:latest
@@ -26,6 +26,7 @@
         name: "{{ workload.image }}"
         state: present
       register: retrieve_workload_image
+      failed_when: retrieve_workload_image is failed
 
     - name: Install tools for workload {{ workload.name }}
       become: true
@@ -33,6 +34,7 @@
         podman container runlabel {{ workload.labels.install }} {{ workload.image }}
       register: workload_runlabel_install
       changed_when: "'already exist' not in workload_runlabel_install.stdout"
+      failed_when: workload_runlabel_install is failed
 
     - name: Install required packages, if any, for workload {{ workload.name }}
       become: true
@@ -40,12 +42,11 @@
         name: "{{ workload.required_pkgs }}"
         state: present
       register: required_pkgs_install
-      when: 
-        - ((workload.required_pkgs | default([])) | length) > 0
+      when: ((workload.required_pkgs | default([])) | length) > 0
+      failed_when: required_pkgs_install is failed
 
     - name: Handle reboot, if needed
-      when: 
-        - required_pkgs_install is changed
+      when: required_pkgs_install is changed
       block:
         - name: Check if the service unit file exists
           become: true
@@ -59,9 +60,7 @@
             src: myplaybook.service.j2
             dest: /etc/systemd/system/myplaybook.service
           register: template_result
-          ignore_errors: yes
-          when: 
-            - file_stat.stat.exists == false
+          when: not file_stat.stat.exists
 
         - name: Enable and start the systemd service
           become: true
@@ -69,21 +68,16 @@
             name: myplaybook
             state: stopped
             enabled: yes
-          register: service_result
-          ignore_errors: yes
-          when: 
-            - file_stat.stat.exists == false
+          when: not file_stat.stat.exists
 
         - name: Reboot system after all tasks
           become: true
           ansible.builtin.reboot:
             reboot_timeout: 10
-          when: 
-            - file_stat.stat.exists == false
+          when: not file_stat.stat.exists
 
     - name: Setup service for workload {{ workload.name }}
-      when: 
-        - workload.service is defined
+      when: workload.service is defined
       block:
         - name: Ensure service can be started for workload {{ workload.name }}
           become: true
@@ -97,24 +91,20 @@
           ansible.builtin.systemd_service:
             name: "{{ workload.service.name }}"
             enabled: true
-          when: 
-            - workload_service_start is success
+          when: workload_service_start is success
 
         - name: Wait for service to be ready for workload {{ workload.name }}
-          when: 
-            - workload.service.wait_for is defined
+          when: workload.service.wait_for is defined
           block:
             - name: Check service path for workload {{ workload.name }}
               ansible.builtin.wait_for:
                 path: "{{ workload.service.wait_for.path }}"
-              when: 
-                - workload.service.wait_for.path is defined
+              when: workload.service.wait_for.path is defined
 
             - name: Check service port for workload {{ workload.name }}
               ansible.builtin.wait_for:
                 port: "{{ workload.service.wait_for.port }}"
-              when: 
-                - workload.service.wait_for.port is defined
+              when: workload.service.wait_for.port is defined
 
 - name: Verify that Libvirt is operational
   hosts: alphost
@@ -128,28 +118,33 @@
     - name: Report running Libvirt VMs, if any
       ansible.builtin.debug:
         msg: "Running VMs: {{ virt_list_vms.list_vms | join(', ') }}"
-      when: 
-        - ((virt_list_vms.list_vms | default([])) | length) > 0
+      when: ((virt_list_vms.list_vms | default([])) | length) > 0
 
     - name: Create file with content
       become: true
       ansible.builtin.copy:
         content: "works"
-        dest: "/home/test/works.txt"
+        dest: "/usr/local/share/ansible-container/examples/ansible/works.txt"
 
-    - name: Stop the service
-      systemd:
-        name: myplaybook.service
-        state: stopped
-      ignore_errors: yes
-
-    - name: Reload systemd daemon
-      systemd:
-        daemon_reload: yes
-      ignore_errors: yes
-
-    - name: Remove the service file
-      file:
+    - name: Check if the service exists
+      become: true
+      ansible.builtin.stat:
         path: /etc/systemd/system/myplaybook.service
-        state: absent
-      ignore_errors: yes
+      register: file_stat
+
+    - block:
+        - name: Stop the service
+          ansible.builtin.systemd:
+            name: myplaybook.service
+            state: stopped
+
+        - name: Reload systemd daemon
+          ansible.builtin.systemd:
+            daemon_reload: yes
+
+        - name: Remove the service file
+          ansible.builtin.file:
+            path: /etc/systemd/system/myplaybook.service
+            state: absent
+      when: file_stat.stat.exists
+

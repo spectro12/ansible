@@ -1,7 +1,0 @@
----
-# defaults file for alp_reboot
-ansible_working_dir: # dir where the ansible playbook/role needs to exist
-ansible_exec_start:  # name of playbook which needs to be run after reboot
-first_playbook_path: /path/to/first_playbook.yml
-second_playbook_path: "{{ ansible_working_dir }}/{{ ansible_exec_start }}"
-
