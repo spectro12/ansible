@@ -120,12 +120,6 @@
         msg: "Running VMs: {{ virt_list_vms.list_vms | join(', ') }}"
       when: ((virt_list_vms.list_vms | default([])) | length) > 0
 
-    - name: Create file with content
-      become: true
-      ansible.builtin.copy:
-        content: "works"
-        dest: "/usr/local/share/ansible-container/examples/ansible/works.txt"
-
     - name: Check if the service exists
       become: true
       ansible.builtin.stat:
