@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 Type=oneshot
-WorkingDirectory= /usr/local/share/ansible-container/examples/ansible
-ExecStart=ansible-playbook {{ playbook_name }}
+WorkingDirectory={{ playbook_path }}
+ExecStart=ansible-playbook -vvv {{ ansible_playbook_basename }} --extra-vars 'reboot_mode=auto'
 User=root
 
 [Install]
