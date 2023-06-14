@@ -1,14 +1,16 @@
-Refactor Ansible playbook for better error handling and system manipulation
+Commit Message:
 
-Details:
+"Enhanced error handling and added auto-reboot functionality in setup_libvirt_host.yml"
 
-    Introduced a variable playbook_name with the value "setup_libvirt_host.yml".
+Changes:
 
-    Added failed_when conditions in tasks "Retrieve image for workload", "Install tools for workload" and "Install required packages, if any, for workload" for better error handling.
+1. Added a comment at the top of the file to explain how to enable auto reboot while running as root and to ensure ansible container is installed as root.
 
-    Refactored the "Handle reboot, if needed" task block with additional tasks: checking for an existing systemd service unit file, creating a systemd service unit file using a template if not present, enabling and starting the service, and finally rebooting the system.
+2. Added two new variables: 'ansible_playbook_basename' and 'playbook_path' under 'vars'.
 
+3. Added 'failed_when' conditions to the tasks 'Retrieve image for workload {{ workload.name }}', 'Install tools for workload {{ workload.name }}', and 'Install required packages, if any, for workload {{ workload.name }}' to enhance error handling.
 
-    Introduced a new task "Check if the service exists" and a conditional block of tasks for stopping the systemd service, reloading the systemd daemon, and removing the service file if it exists.
+4. Split the 'Handle reboot, if needed' task into two separate tasks: 'Handle manual reboot, if needed' and 'Handle auto reboot, if needed'. The latter includes additional tasks to check if the service unit file exists, create a systemd service unit file if it doesn't exist, enable and start the systemd service, and reboot the system after all tasks.
 
-These changes enhance error handling, improve system configuration management, and ensure better cleaning up of resources after use.
+5. Added a comment to the task 'Enable service to start on reboot for workload {{ workload.name }}' to clarify its purpose.
+

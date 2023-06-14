@@ -3,8 +3,9 @@
 - name: Setup ALP system as a libvirt host
   hosts: alphost
   vars:
+    ansible_user: spectro # wip dynamic
     ansible_playbook_basename: "setup_libvirt_host.yml"  # The name of the playbook being run
-    playbook_path: "/home/spectro/share/ansible-container/examples/ansible"  # The path where the playbook exists
+    playbook_path: "/usr/local/share/ansible-container/examples/ansible"  # The path where the playbook exists
     workload:
       name: libvirtd
       image: registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/kvm:latest
@@ -72,12 +73,16 @@
       when: required_pkgs_install.changed and (reboot_mode | default('manual')) == 'auto'
       block:
 
+        - name: Enable lingering for the user
+          ansible.builtin.command:
+            cmd: "loginctl enable-linger {{ ansible_user }}"
+
         - name: Check if the service unit file exists
           become: true
           ansible.builtin.stat:
             path: /etc/systemd/system/myplaybook.service
           register: file_stat
-          
+# if it exists remove it
         - name: Create systemd service unit file
           become: true
           ansible.builtin.template:
@@ -98,6 +103,8 @@
           become: true
           ansible.builtin.reboot:
             reboot_timeout: 10
+          async: 600
+          poll: 0
           when: not file_stat.stat.exists
 
     - name: Setup service for workload {{ workload.name }}
@@ -153,6 +160,12 @@
           ansible.builtin.file:
             path: /etc/systemd/system/myplaybook.service
             state: absent    
+
+        - name: Remove the myplaybook.service service file
+          become: true
+          ansible.builtin.file:
+            path: /usr/local/share/ansible-container/examples/ansible/works.txt
+            state: touch    
 
         - name: Reload systemd daemon
           become: true

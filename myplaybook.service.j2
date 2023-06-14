@@ -5,9 +5,8 @@ After=network.target
 [Service]
 Type=oneshot
 WorkingDirectory={{ playbook_path }}
-ExecStart=ansible-playbook -vvv {{ ansible_playbook_basename }} --extra-vars 'reboot_mode=auto'
-User=root
+ExecStart=ansible-playbook {{ ansible_playbook_basename }} --extra-vars 'reboot_mode=auto'
+User={{ ansible_user }}
 
 [Install]
 WantedBy=multi-user.target
-
