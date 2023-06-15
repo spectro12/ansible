@@ -1,11 +1,11 @@
-# use ansible-playbook setup_libvirt_host.yml --extra-vars "reboot_mode=auto" to enable auto reboot while running as root ensure ansible container is installed as root.
+# use ansible-playbook setup_libvirt_host.yml -e "playbook_path=$(pwd)" -e "ansible_user=$(whoami)" -e "reboot_mode=auto" to enable auto reboot while running as root ensure ansible container is installed as root.
 
 - name: Setup ALP system as a libvirt host
   hosts: alphost
   vars:
-    ansible_user: spectro # wip dynamic
-    ansible_playbook_basename: "setup_libvirt_host.yml"  # The name of the playbook being run
-    playbook_path: "/usr/local/share/ansible-container/examples/ansible"  # The path where the playbook exists
+    ansible_playbook_basename: "setup_libvirt_host.yml"
+    ansible_user: "{{ ansible_user }}"  
+    playbook_path: "{{ playbook_path }}"
     workload:
       name: libvirtd
       image: registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/kvm:latest
@@ -82,7 +82,14 @@
           ansible.builtin.stat:
             path: /etc/systemd/system/myplaybook.service
           register: file_stat
-# if it exists remove it
+
+        - name: Remove existing systemd service unit file
+          become: true
+          ansible.builtin.file:
+            path: /etc/systemd/system/myplaybook.service
+            state: absent
+          when: file_stat.stat.exists
+
         - name: Create systemd service unit file
           become: true
           ansible.builtin.template:
@@ -161,12 +168,6 @@
             path: /etc/systemd/system/myplaybook.service
             state: absent    
 
-        - name: Remove the myplaybook.service service file
-          become: true
-          ansible.builtin.file:
-            path: /usr/local/share/ansible-container/examples/ansible/works.txt
-            state: touch    
-
         - name: Reload systemd daemon
           become: true
           ansible.builtin.systemd:
@@ -174,5 +175,3 @@
 
         - name: Conditionally end the playbook
           meta: end_play
-
-
