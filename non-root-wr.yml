@@ -1,0 +1,61 @@
+---
+- hosts: alphost
+  gather_facts: no
+  vars:
+    ansible_user: hash
+    playbook_path: /home/hash/share/ansible-container/examples/ansible
+    service_name: "playbook.service"
+    service_description: "Run Ansible playbook at boot"
+    service_exec_start: "/home/hash/bin/ansible-playbook qa.yml"
+  tasks:
+    - name: Enable lingering for the user
+      become: yes
+      command: "loginctl enable-linger {{ ansible_user }}"
+
+    - name: Create systemd service directory if it does not exist
+      file:
+        path: "/home/{{ ansible_user }}/.config/systemd/user"
+        state: directory
+        mode: '0755'
+
+    - name: Create systemd service file
+      copy:
+        dest: "/home/{{ ansible_user }}/.config/systemd/user/{{ service_name }}"
+        content: |
+          [Unit]
+          Description={{ service_description }}
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Type=oneshot
+          WorkingDirectory={{ playbook_path }}
+          ExecStart={{ service_exec_start }}
+
+          [Install]
+          WantedBy=default.target
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
+    - name: Reload systemd daemon
+      become: yes
+      systemd:
+        daemon_reload: yes
+
+
+    - name: Enable the service
+      command: "systemctl --user enable playbook.service"
+
+
+    - name: Check if the service has already been started
+      stat:
+        path: "/home/{{ ansible_user }}/.ansible_service_started"
+      register: service_started_file
+
+    - name: Create a file to mark that the service has been started
+      file:
+        path: "/home/{{ ansible_user }}/.ansible_service_started"
+        state: touch
+      when: not service_started_file.stat.exists
+

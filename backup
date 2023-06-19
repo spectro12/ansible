@@ -68,11 +68,51 @@
           ansible.builtin.fail:
             msg: "Reboot required"    
 
+
     - name: Handle auto reboot, if needed # Check if automatic reboot is required
-      include_role:
-        name: alp_reboot
-        tasks_from: start
       when: required_pkgs_install.changed and (reboot_mode | default('manual')) == 'auto'
+      block:
+
+        - name: Enable lingering for the user
+          ansible.builtin.command:
+            cmd: "loginctl enable-linger {{ ansible_user }}"
+
+        - name: Check if the service unit file exists
+          become: true
+          ansible.builtin.stat:
+            path: /etc/systemd/system/myplaybook.service
+          register: file_stat
+
+        - name: Remove existing systemd service unit file
+          become: true
+          ansible.builtin.file:
+            path: /etc/systemd/system/myplaybook.service
+            state: absent
+          when: file_stat.stat.exists
+
+        - name: Create systemd service unit file
+          become: true
+          ansible.builtin.template:
+            src: myplaybook.service.j2
+            dest: /etc/systemd/system/myplaybook.service
+          register: template_result
+          when: not file_stat.stat.exists
+
+        - name: Enable and start the systemd service
+          become: true
+          ansible.builtin.service:
+            name: myplaybook
+            state: stopped
+            enabled: yes
+          when: not file_stat.stat.exists
+
+        - name: Reboot system after all tasks
+          become: true
+          ansible.builtin.reboot:
+            reboot_timeout: 10
+          async: 600
+          poll: 0
+          when: not file_stat.stat.exists
 
     - name: Setup service for workload {{ workload.name }}
       when: workload.service is defined
@@ -118,8 +158,20 @@
         msg: "Running VMs: {{ virt_list_vms.list_vms | join(', ') }}"
       when: ((virt_list_vms.list_vms | default([])) | length) > 0
 
-    - name: clean up # Cleanup tasks
-      include_role:
-        name: alp_reboot
-        tasks_from: end
+    - name: clean up  # Cleanup tasks
       when: (reboot_mode | default('manual')) == 'auto' # If reboot mode is automatic
+      block:
+
+        - name: Remove the myplaybook.service service file
+          become: true
+          ansible.builtin.file:
+            path: /etc/systemd/system/myplaybook.service
+            state: absent    
+
+        - name: Reload systemd daemon
+          become: true
+          ansible.builtin.systemd:
+            daemon_reload: yes
+
+        - name: Conditionally end the playbook
+          meta: end_play
