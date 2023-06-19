@@ -33,7 +33,7 @@ You can include this role in your Ansible playbook to manage system reboots.
 For instance, you can add the alp_reboot role to your playbook as shown:
 
 
-...yaml
+```yaml
 
 - hosts: alphost
   roles:
@@ -43,16 +43,16 @@ For instance, you can add the alp_reboot role to your playbook as shown:
     playbook_path: /path/to/your/playbook
     ansible_playbook_basename: your_playbook.yml
     reboot_mode: auto
-
+```
 
 Replace your_user, /path/to/your/playbook, and your_playbook.yml with the appropriate values. This playbook runs the alp_reboot role on the hosts defined under alphost.
 
 Alternatively, you can use this role directly from the command line:
 
 
-...bash
+```bash
 
 ansible-playbook setup_libvirt_host.yml -e "playbook_path=$(pwd)" -e "ansible_user=$(whoami)" -e "reboot_mode=auto"
-
+```
 
 
