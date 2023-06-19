@@ -24,23 +24,6 @@ Here's an overview of the tasks executed by this role:
 7. Reload the systemd daemon.
 8. Conditionally end the playbook execution.
 
-## Templates
-
-This role uses the `myplaybook.service.j2` template to create a systemd service unit file. The file has the following structure:
-
-```ini
-[Unit]
-Description=My Ansible Playbook
-After=network.target
-
-[Service]
-Type=oneshot
-WorkingDirectory={{ playbook_path }}
-ExecStart=ansible-playbook {{ ansible_playbook_basename }}  -e 'playbook_path={{ playbook_path }}' -e 'ansible_user={{ ansible_user }}' -e 'reboot_mode=auto'
-User={{ ansible_user }}
-
-[Install]
-WantedBy=multi-user.target
 
 
 Usage
