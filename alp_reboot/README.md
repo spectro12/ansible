@@ -42,11 +42,13 @@ User={{ ansible_user }}
 [Install]
 WantedBy=multi-user.target
 
+
 Usage
 
 You can include this role in your Ansible playbook to manage system reboots.
 
 For instance, you can add the alp_reboot role to your playbook as shown:
+
 
 yaml
 
@@ -59,9 +61,11 @@ yaml
     ansible_playbook_basename: your_playbook.yml
     reboot_mode: auto
 
+
 Replace your_user, /path/to/your/playbook, and your_playbook.yml with the appropriate values. This playbook runs the alp_reboot role on the hosts defined under alphost.
 
 Alternatively, you can use this role directly from the command line:
+
 
 bash
 
