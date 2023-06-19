@@ -1,37 +1,41 @@
-Ansible Role README
-Overview
+markdown
 
-The alp_reboot role is designed to manage system reboots in an Ansible-controlled environment. It checks for the existence of a specific systemd service unit file, removes it if it does exist, and then recreates it based on a specific template. This role also manages the lingering settings for a specific user and initiates a system reboot when necessary.
-Requirements
+# Ansible Role: alp_reboot
 
-    Ansible 2.9 or higher
-    Systemd as the init system
-    User must have sudo privileges
-    Targeted hosts must be Linux-based
+## Overview
 
-Role Variables
+The `alp_reboot` role is designed to manage system reboots in an Ansible-controlled environment. It checks for the existence of a specific systemd service unit file, removes it if it does exist, and then recreates it based on a specific template. This role also manages the lingering settings for a specific user and initiates a system reboot when necessary.
 
-The main variable used in this role is ansible_user, which specifies the user account to enable lingering for and to execute tasks that require elevated privileges. Additionally, playbook_path, ansible_playbook_basename, and reboot_mode are also defined in this role.
-Tasks Included in This Role
+## Requirements
+
+- Ansible 2.9 or higher
+- Systemd as the init system
+- User must have sudo privileges
+- Targeted hosts must be Linux-based
+
+## Role Variables
+
+The main variable used in this role is `ansible_user`, which specifies the user account to enable lingering for and to execute tasks that require elevated privileges. Additionally, `playbook_path`, `ansible_playbook_basename`, and `reboot_mode` are also defined in this role.
+
+## Tasks Included in This Role
 
 Here's an overview of the tasks executed by this role:
 
-    Enable lingering for the ansible_user.
-    Check if the service unit file /etc/systemd/system/myplaybook.service exists. If it does, remove it.
-    Create a systemd service unit file from the template myplaybook.service.j2 only if it did not exist previously.
-    Enable and start the myplaybook service, only if the service unit file did not previously exist.
-    Reboot the system if the service unit file did not previously exist.
-    Remove the myplaybook.service service file.
-    Create a new file at /home/works.txt.
-    Reload the systemd daemon.
-    Conditionally end the playbook execution.
+1. Enable lingering for the `ansible_user`.
+2. Check if the service unit file `/etc/systemd/system/myplaybook.service` exists. If it does, remove it.
+3. Create a systemd service unit file from the template `myplaybook.service.j2` only if it did not exist previously.
+4. Enable and start the `myplaybook` service, only if the service unit file did not previously exist.
+5. Reboot the system if the service unit file did not previously exist.
+6. Remove the `myplaybook.service` service file.
+7. Create a new file at `/home/works.txt`.
+8. Reload the systemd daemon.
+9. Conditionally end the playbook execution.
 
-Templates
+## Templates
 
-This role uses the myplaybook.service.j2 template to create a systemd service unit file. The file has the following structure:
+This role uses the `myplaybook.service.j2` template to create a systemd service unit file. The file has the following structure:
 
-makefile
-
+```ini
 [Unit]
 Description=My Ansible Playbook
 After=network.target
@@ -70,4 +74,14 @@ bash
 
 ansible-playbook setup_libvirt_host.yml -e "playbook_path=$(pwd)" -e "ansible_user=$(whoami)" -e "reboot_mode=auto"
 
+License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+yaml
+
+
+---
+
+This will render correctly on GitHub, with proper headings and code block form
 
