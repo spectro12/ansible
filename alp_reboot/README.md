@@ -6,12 +6,6 @@ markdown
 
 The `alp_reboot` role is designed to manage system reboots in an Ansible-controlled environment. It checks for the existence of a specific systemd service unit file, removes it if it does exist, and then recreates it based on a specific template. This role also manages the lingering settings for a specific user and initiates a system reboot when necessary.
 
-## Requirements
-
-- Ansible 2.9 or higher
-- Systemd as the init system
-- User must have sudo privileges
-- Targeted hosts must be Linux-based
 
 ## Role Variables
 
@@ -27,9 +21,8 @@ Here's an overview of the tasks executed by this role:
 4. Enable and start the `myplaybook` service, only if the service unit file did not previously exist.
 5. Reboot the system if the service unit file did not previously exist.
 6. Remove the `myplaybook.service` service file.
-7. Create a new file at `/home/works.txt`.
-8. Reload the systemd daemon.
-9. Conditionally end the playbook execution.
+7. Reload the systemd daemon.
+8. Conditionally end the playbook execution.
 
 ## Templates
 
@@ -74,14 +67,5 @@ bash
 
 ansible-playbook setup_libvirt_host.yml -e "playbook_path=$(pwd)" -e "ansible_user=$(whoami)" -e "reboot_mode=auto"
 
-License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-yaml
-
-
----
-
-This will render correctly on GitHub, with proper headings and code block form
 
