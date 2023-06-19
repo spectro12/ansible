@@ -30,8 +30,37 @@ Usage
 
 You can include this role in your Ansible playbook to manage system reboots.
 
-For instance, you can add the alp_reboot role to your playbook as shown:
+The include_role syntax in the playbook looks like this:
 
+```yaml
+
+- name: Handle auto reboot, if needed
+  include_role:
+    name: alp_reboot
+    tasks_from: start
+  when: required_pkgs_install.changed and (reboot_mode | default('manual')) == 'auto'
+```
+Here's the breakdown of what's happening:
+
+    The name: alp_reboot part specifies the role to include, which in this case is alp_reboot.
+
+    The tasks_from: start part specifies the tasks file from the alp_reboot role to include. Ansible roles typically have a tasks directory that contains various task files. The start value refers to start.yml file within the tasks directory of the alp_reboot role.
+
+    The when: required_pkgs_install.changed and (reboot_mode | default('manual')) == 'auto' part specifies the condition under which the tasks from the included role should be executed. In this case, the alp_reboot role will be included if the required_pkgs_install result has changed (i.e., packages have been installed) and the reboot_mode variable is set to 'auto'.
+
+Similarly, towards the end of the playbook, the alp_reboot role is included again but with tasks_from: end. This refers to the end.yml file within the tasks directory of the alp_reboot role:
+
+```yaml
+
+- name: clean up
+  include_role:
+    name: alp_reboot
+    tasks_from: end
+  when: (reboot_mode | default('manual')) == 'auto'
+
+Here, the role's tasks are executed when the reboot_mode variable is set to 'auto'. These tasks would typically include any cleanup activities that need to be performed after the main tasks of the role have been executed.
+```
+You can add the alp_reboot role to your playbook as shown:
 
 ```yaml
 
