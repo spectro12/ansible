@@ -17,21 +17,13 @@ Tasks Included in This Role
 Here's an overview of the tasks executed by this role:
 
     Enable lingering for the ansible_user.
-
     Check if the service unit file /etc/systemd/system/myplaybook.service exists. If it does, remove it.
-
     Create a systemd service unit file from the template myplaybook.service.j2 only if it did not exist previously.
-
     Enable and start the myplaybook service, only if the service unit file did not previously exist.
-
     Reboot the system if the service unit file did not previously exist.
-
     Remove the myplaybook.service service file.
-
     Create a new file at /home/works.txt.
-
     Reload the systemd daemon.
-
     Conditionally end the playbook execution.
 
 Templates
@@ -77,4 +69,5 @@ Alternatively, you can use this role directly from the command line:
 bash
 
 ansible-playbook setup_libvirt_host.yml -e "playbook_path=$(pwd)" -e "ansible_user=$(whoami)" -e "reboot_mode=auto"
+
 
